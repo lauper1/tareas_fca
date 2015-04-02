@@ -166,26 +166,20 @@ function mig(x::Intervalo)
 	mag(x::Intervalo) = max(abs(x.a), abs(x.b))
 
 ##meter condiciones de redondeo
-function ^(x::Intervalo, n::Integer)
-	if n > 0 && n % 2 == 1
-	return Intervalo(x.a^n, x.b^n)
-	elseif n > 0 && n % 2 == 0
-	return Intervalo((mig(x))^n, (mag(x))^n)
-	elseif n == 0
-	return Intervalo(1, 1)
-	elseif n < 0 && n ∈ (0, x) == false
-	return Intervalo(1/x.a, 1/x.b)^(-n)
-	else 
-	return println("Error")
-	end
-	end
-#function ^(x::Intervalo, y::Real)
- #   d= min(x.a^a, x2^a)
-  #  u=max(x1^a, x2^a)
 
-#Intervalo(d,u)
-   
-#end
+
+
+function ^(x::Intervalo, n::Integer)
+    
+    if (x.a > 0 && x.b > 0)
+        return Intervalo(x.a^n,x.b^n)
+        
+        elseif (x.b < 0 && x.a < 0)
+            return Intervalo(x.b^n,x.a^n)
+            else    
+            return Intervalo(0,max(x.a^n,x.b^n))
+    end
+end 
 
 ##########################
 ##########################
