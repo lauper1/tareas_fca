@@ -1,8 +1,6 @@
 module Intervalos
 
-
-
-export Intervalo, +,-,*,/, ==, ∈, ⊂, ^
+export Intervalo, +,-,*,/, ==, ∈, ⊂, ^, UnionI
 
 type Intervalo
     a::BigFloat
@@ -20,6 +18,11 @@ new(a,b)
 end
 end
 
+
+type UnionI
+p::Intervalo
+s::Intervalo
+end
 
 function round!(i::Intervalo)
     set_rounding(BigFloat, RoundDown)
@@ -79,6 +82,15 @@ u=x.b-y.b
 round!(Intervalo(d, u))
 end
 
+function -(x::Intervalo, y::Real)
+ x-Intervalo(y)
+end
+
+function -(x::Real, y::Intervalo)
+ Intervalo(x)-y
+end
+
+
 
 ##########################
 ##########################
@@ -108,15 +120,23 @@ function *(c::Real, x::Intervalo)
    round!(Intervalo(c*x.a, c*x.b))
 end
 
+
+function *(x::Intervalo, u::UnionI)
+UnionI(x*u.p, x*u.s)
+end
 ##########################
 ##########################
 ######## DIVISION ########
 ##########################
 ##########################
 
-function /(x::Intervalo, y::Intervalo)#la division se define en terminos de la multiplicacion
+function /(x::Intervalo, y::Intervalo)#la division se define en terminos de la multiplicacion y depende de si el intervalo divisor contiene al cero
+if  ∈(0.0, y) == true
+x*UnionI(Intervalo(-Inf,1/y.a ), Intervalo(1/y.b, Inf))
+else
     Intervalo(x.a,x.b)*Intervalo(1/y.a, 1/y.b)
     
+end
 end
 
 function /(x::Intervalo, y::Real)#la division se define en terminos de la multiplicacion
@@ -125,7 +145,7 @@ function /(x::Intervalo, y::Real)#la division se define en terminos de la multip
 end
 
 function /(x::Real, y::Intervalo)#la division se define en terminos de la multiplicacion
-    Intervalo(x)*Intervalo(1/y.a, 1/y.b)
+   Intervalo(x)*Intervalo(1/y.a, 1/y.b)
     
 end
 
@@ -136,28 +156,29 @@ end
 ##########################
 ##########################
 
-#function mig(x::Intervalo)
-#		if ∈(0.0, x) == true
-#			return 0
-#		else return min(abs(x.lo), abs(x.hi))
-#		end
-#	end
-#
-#	mag(x::Intervalo) = max(abs(x.a), abs(x.b))
-#
+function mig(x::Intervalo)
+		if ∈(0.0, x) == true
+			return 0
+		else return min(abs(x.a), abs(x.b))
+		end
+	end
 
-#function ^(x::Intervalo, n::Integer)
-#		if n > 0 && n % 2 == 1
-#			return Intervalo(x.a^n, x.b^n)
-#		elseif n > 0 && n % 2 == 0
-#			return Interval((mig(x))^n, (mag(x))^n)
-#		elseif n == 0
-#			return Intervalo(1, 1)
-##		elseif n < 0 && n ∈ (0, x) == false
-#			return Intervalo(1/x.a, 1/x.b)^(-n)
-#		# elseif return println("Error")
-#		end
-#	end
+	mag(x::Intervalo) = max(abs(x.a), abs(x.b))
+
+
+function ^(x::Intervalo, n::Integer)
+	if n > 0 && n % 2 == 1
+	return Intervalo(x.a^n, x.b^n)
+	elseif n > 0 && n % 2 == 0
+	return Intervalo((mig(x))^n, (mag(x))^n)
+	elseif n == 0
+	return Intervalo(1, 1)
+	elseif n < 0 && n ∈ (0, x) == false
+	return Intervalo(1/x.a, 1/x.b)^(-n)
+	else 
+	return println("Error")
+	end
+	end
 #function ^(x::Intervalo, y::Real)
  #   d= min(x.a^a, x2^a)
   #  u=max(x1^a, x2^a)
@@ -183,6 +204,13 @@ function ==(x::Intervalo, y::Intervalo)
 end
 
 
+function ==(x::UnionI, y::UnionI)
+    if (x.s==y.s || x.s==y.p)&&(x.p==y.s || x.p==y.p)
+        true
+    else 
+        false
+    end
+end
 
 ##########################
 ##########################
@@ -202,6 +230,14 @@ function ∈(c::Real,x::Intervalo)
 
 end
 
+function ∈(c::Real,x::UnionI)
+   if ∈ (c,x.s) ==true|| ∈(c,x.p)
+        true
+   else
+        false
+   end
+
+end
 
 function ⊂(x::Intervalo, y::Intervalo)
 	if y.a<x.a&&x.b<y.b
@@ -214,7 +250,7 @@ function ⊂(x::Intervalo, y::Intervalo)
 end 
 
 
-####estaría muy bonito arreglar esto para que aparezca chido, buscar en particulas de ejemplos
+####estaría muy bonito arreglar esto para que aparezca chido, buscar en #particulas de ejemplos
 #import Base.show
 #show(IO,Intervalo)
 #show(io, x::Intervalo) = print(io, " [$x.a, $x.b])")
