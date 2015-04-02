@@ -165,7 +165,7 @@ function mig(x::Intervalo)
 
 	mag(x::Intervalo) = max(abs(x.a), abs(x.b))
 
-
+##meter condiciones de redondeo
 function ^(x::Intervalo, n::Integer)
 	if n > 0 && n % 2 == 1
 	return Intervalo(x.a^n, x.b^n)
@@ -223,18 +223,18 @@ end
 
 function ∈(c::Real,x::Intervalo)
    if x.a<=c&&c<=x.b
-        true
+       return true
    else
-        false
+        return false
    end
 
 end
 
 function ∈(c::Real,x::UnionI)
-   if ∈ (c,x.s) ==true|| ∈(c,x.p)
-        true
+   if ∈ (c,x.s) ==true|| ∈(c,x.p)==true
+       return true
    else
-        false
+        return false
    end
 
 end
