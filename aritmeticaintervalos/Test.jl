@@ -20,8 +20,12 @@ facts("primeros facts que voy a realizar") do
 @fact Intervalo(0,-1)=>Intervalo(-1, 0)
 
 
+#ALGUNAS PROPIEDADES DE LA DIVISIÓN ENTRE INTERVALOS QUE CONTIENEN AL CERO
+@fact Intervalo(1,1)/Intervalo(-1,Inf)=>UnionI(Intervalo(-Inf,-1),Intervalo(0,Inf))
 
 ##que sea capaz de mostrar que un intervalo se encuentra en otro mas grande
+
+@fact (0 ∈ UnionI(Intervalo(-9, -1), Intervalo(1,Inf)))=> false
 
 @fact (Intervalo(-1,1) ⊂ Intervalo(-2,2)) =>true
 
@@ -30,6 +34,10 @@ facts("primeros facts que voy a realizar") do
 
 
 @fact (Intervalo(-10,10) ⊂ Intervalo(-2,2)) =>false
+
+@fact Intervalo(-1,1)^2=> Intervalo(0,1)
+@fact Intervalo(-1,1)*Intervalo(-1,1)=> Intervalo(-1,1)
+
 
 
 ###checar cosas de raices
