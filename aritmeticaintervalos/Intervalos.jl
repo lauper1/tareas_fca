@@ -1,6 +1,6 @@
 module Intervalos
 
-export Intervalo, +,-,*,/, ==, ∈, ⊂, ^, UnionI
+export Intervalo, +,-,*,/, ==, ∈, ⊂, ^, UnionI, RUP, RDOWN ,exp, eva
 
 type Intervalo
     a::BigFloat
@@ -19,10 +19,14 @@ end
 end
 
 
+
+
 type UnionI
 p::Intervalo
 s::Intervalo
 end
+
+
 
 function round!(i::Intervalo)
     set_rounding(BigFloat, RoundDown)
@@ -37,7 +41,32 @@ function Intervalo(c)
     Intervalo(c,c)
 end
 
+###para realizar los redondeos de manera mas limpia
 
+###funciones de un solo argumento, como exp, *, cos
+
+function RUP(g::Function, x)  #redondeo hacia arriba
+set_rounding(BigFloat, RoundUp)
+g(x)
+end
+
+
+function RDOWN(g::Function, x) ##redonde hacia abajo
+set_rounding(BigFloat, RoundDown)
+g(x)
+end
+
+#para funciones que requieren dos argumentos como ^, log
+function RUP(g::Function, x, y)  #redondeo hacia arriba
+set_rounding(BigFloat, RoundUp)
+g(x, y)
+end
+
+
+function RDOWN(g::Function, x, y) ##redonde hacia abajo
+set_rounding(BigFloat, RoundDown)
+g(x, y)
+end
 #funciones para usar con intervalos
 
 
@@ -181,6 +210,10 @@ function ^(x::Intervalo, n::Integer)
     end
 end 
 
+function ^(x::Intervalo, n::Real)   #aqui no se puede utilizar directamente  eva porque la potencia requiere dos argumentos, la base y el exponente, tampoco puedo utilizar RDOWN y RUP por la misma razon
+eva(^, x,n)
+end
+
 ##########################
 ##########################
 ######## IGUALDAD ########
@@ -243,6 +276,59 @@ function ⊂(x::Intervalo, y::Intervalo)
 	end
 end 
 
+##########################
+##########################
+####### funciones ########
+####### monotonas ########
+##########################
+##########################
+
+
+###lo siguiente es para aplicar con funciones monótonas en general, sin embargo no es muy cómodo a la hora de usar.
+function eva(f::Function, I::Intervalo)
+e=f(I.a) 
+c=f(I.b) # esta primera parte solo la realizo para ver cual es menor y cual es mayor y entonces proceder con el redondeo hacia arriba y hacia abajo como corresponde
+
+if e<c  #ES CRECIENTE
+
+Intervalo(RDOWN(f, I.a), RUP(f, I.b))
+
+elseif c<e  #ES DECRECIENTE
+Intervalo(RDOWN(f, I.b), RUP(f, I.a))
+
+else  #IGUAL
+
+Intervalo(RDOWN(f, I.b), RUP(f, I.a))
+
+end
+
+end
+
+# eva para funciones de dos argumentos
+function eva(f::Function, I::Intervalo, n)
+e=f(I.a, n) 
+c=f(I.b, n) # esta primera parte solo la realizo para ver cual es menor y cual es mayor y entonces proceder con el redondeo hacia arriba y hacia abajo como corresponde
+
+if e<c  #ES CRECIENTE
+
+Intervalo(RDOWN(f, I.a, n), RUP(f, I.b, n))
+
+elseif c<e  #ES DECRECIENTE
+Intervalo(RDOWN(f, I.b, n), RUP(f, I.a, n))
+
+else  #IGUAL
+
+Intervalo(RDOWN(f, I.b, n), RUP(f, I.a, n))
+
+end
+
+end
+
+
+exp(x::Intervalo)=eva(exp, x)
+
+
+
 
 ####estaría muy bonito arreglar esto para que aparezca chido, buscar en #particulas de ejemplos
 #import Base.show
@@ -250,6 +336,7 @@ end
 #show(io, x::Intervalo) = print(io, " [$x.a, $x.b])")
 
 end###end del modulo
+
 
 
 
