@@ -38,7 +38,9 @@ facts("primeros facts que voy a realizar") do
 @fact Intervalo(-1,1)^2=> Intervalo(0,1)
 @fact Intervalo(-1,1)*Intervalo(-1,1)=> Intervalo(-1,1)
 
-
+#@fact eva(cos, Intervalo)
+@fact eva(cos, Intervalo(0, π)) => Intervalo(-1,1)
+@fact Intervalo(0,4)^0.5=>Intervalo(0, 2)
 
 ###checar cosas de raices
 end
