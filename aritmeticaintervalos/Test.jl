@@ -32,7 +32,7 @@ end
 
 facts("funciones elementales")do
 ###para funciones monótonas ^, exp
-#@fact log(10, Intervalo(1,2))=>Intervalo(log(1,10), log(2 ,10)) 
+@fact log(10, Intervalo(1,10))=>Intervalo(0,1) 
 @fact Intervalo(0,4)^0.5=>Intervalo(0, 2)
 
 @fact exp(Intervalo(0.2, 0.4))=>Intervalo(RDOWN(exp,0.2), RUP(exp,0.4))
