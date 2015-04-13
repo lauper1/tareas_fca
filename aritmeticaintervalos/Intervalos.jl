@@ -1,6 +1,6 @@
 module Intervalos
 import Base.exp
-export Intervalo, +,-,*,/, ==, ∈, ⊂, ^, UnionI, RUP, RDOWN ,exp, eva, round!
+export Intervalo, +,-,*,/, ==, ∈, ⊂, ^, UnionI, RUP, RDOWN ,exp, eva, round!, log, grafica
 
 ##########################
 ######  tipos ############
@@ -49,31 +49,31 @@ function round!(i::Intervalo)   #aún no se si este es necesario
     i
 end
 
-###funciones de un solo argumento, como exp, *, cos
-
+### para realizar funciones con  redondeo  HACIA ARRIBA (funciones de un solo argumento, como exp, *, cos)
 function RUP(g::Function, x)  #redondeo hacia arriba
-set_rounding(BigFloat, RoundUp)
-g(BigFloat(x))
+	set_rounding(BigFloat, RoundUp)
+	g(BigFloat(x))
 end
 
 
+###HACIA ABAJO
+
 function RDOWN(g::Function, x) ##redonde hacia abajo
-set_rounding(BigFloat, RoundDown)
-g(BigFloat(x))
+	set_rounding(BigFloat, RoundDown)
+	g(BigFloat(x))
 end
 
 #para funciones que requieren dos argumentos como ^, log
 function RUP(g::Function, x, y)  #redondeo hacia arriba
-set_rounding(BigFloat, RoundUp)
-g(BigFloat(x), y)
+	set_rounding(BigFloat, RoundUp)
+	g(BigFloat(x), y)
 end
 
 
 function RDOWN(g::Function, x, y) ##redonde hacia abajo
-set_rounding(BigFloat, RoundDown)
-g(BigFloat(x), y)
+	set_rounding(BigFloat, RoundDown)
+	g(BigFloat(x), y)
 end
-#funciones para usar con intervalos
 
 
 
@@ -83,19 +83,11 @@ end
 ##########################
 ##########################
 
++(x::Intervalo, y::Intervalo)=Intervalo(RDOWN(+,x.a, y.a), RUP(+,x.b,y.b))
 
-+(x::Intervalo, y::Intervalo)=round!(Intervalo(RDOWN(+,x.a, y.a), RUP(+,x.b,y.b)))
++(x::Intervalo, y::Real)=Intervalo(y)+x
 
-
-
-function +(x::Intervalo, y::Real)
- Intervalo(y)+x
-end
-
-function +(x::Real, y::Intervalo)
- Intervalo(x)+y
-end
-
++(x::Real, y::Intervalo)= Intervalo(x)+y
 
 
 ##########################
@@ -104,17 +96,11 @@ end
 ##########################
 ##########################
 
--(x::Intervalo, y::Intervalo)=round!(Intervalo(RDOWN(-,x.a, y.a), RUP(-,x.b,y.b)))
+-(x::Intervalo, y::Intervalo)=Intervalo(RDOWN(-,x.a, y.a), RUP(-,x.b,y.b))
 
+-(x::Intervalo, y::Real)=x-Intervalo(y)
 
-function -(x::Intervalo, y::Real)
- x-Intervalo(y)
-end
-
-function -(x::Real, y::Intervalo)
- Intervalo(x)-y
-end
-
+-(x::Real, y::Intervalo)= Intervalo(x)-y
 
 
 ##########################
@@ -129,26 +115,18 @@ set_rounding(BigFloat, RoundDown)
 d=min(x.a*y.b,x.b*y.a, x.a*y.a, x.b*y.b)
 set_rounding(BigFloat, RoundUp)
 u= max(x.a*y.b,x.b*y.a, x.a*y.a, x.b*y.b)
-round!(Intervalo(d,u))    
+Intervalo(d,u)   
 end
 
 
-function *(x::Intervalo, c::Real)
-  Intervalo(c)*x
-end
+*(x::Intervalo, c::Real)=Intervalo(c)*x
+
+*(c::Real, x::Intervalo)=Intervalo(c*x.a, c*x.b)
+
+*(x::Intervalo, u::UnionI)=UnionI(x*u.p, x*u.s)
 
 
 
-
-function *(c::Real, x::Intervalo)
-   
-   round!(Intervalo(c*x.a, c*x.b))
-end
-
-
-function *(x::Intervalo, u::UnionI)
-UnionI(x*u.p, x*u.s)
-end
 ##########################
 ##########################
 ######## DIVISION ########
@@ -156,23 +134,18 @@ end
 ##########################
 
 function /(x::Intervalo, y::Intervalo)#la division se define en terminos de la multiplicacion y depende de si el intervalo divisor contiene al cero
-if  ∈(0.0, y) == true
-x*UnionI(Intervalo(-Inf,1/y.a ), Intervalo(1/y.b, Inf))
-else
-    Intervalo(x.a,x.b)*Intervalo(1/y.a, 1/y.b)
-    
-end
-end
-
-function /(x::Intervalo, y::Real)#la division se define en terminos de la multiplicacion
-    Intervalo(x.a,x.b)*Intervalo(1/y)
-    
+	if  ∈(0.0, y) == true
+		x*UnionI(Intervalo(-Inf,1/y.a ), Intervalo(1/y.b, Inf))
+	else
+		    Intervalo(x.a,x.b)*Intervalo(1/y.a, 1/y.b)
+    	end
 end
 
-function /(x::Real, y::Intervalo)#la division se define en terminos de la multiplicacion
-   Intervalo(x)*Intervalo(1/y.a, 1/y.b)
+/(x::Intervalo, y::Real)=Intervalo(x.a,x.b)*Intervalo(1/y)
     
-end
+
+/(x::Real, y::Intervalo)= Intervalo(x)*Intervalo(1/y.a, 1/y.b)
+    
 
 
 ##########################
@@ -188,27 +161,37 @@ function mig(x::Intervalo)
 		end
 	end
 
-	mag(x::Intervalo) = max(abs(x.a), abs(x.b))
 
-##meter condiciones de redondeo
+mag(x::Intervalo) = max(abs(x.a), abs(x.b))
 
+#condiciones de redondeo
 
 
 function ^(x::Intervalo, n::Integer)
-    
-    if (x.a > 0 && x.b > 0)
+     if (x.a > 0 && x.b > 0)
         return Intervalo(x.a^n,x.b^n)
-        
-        elseif (x.b < 0 && x.a < 0)
-            return Intervalo(x.b^n,x.a^n)
-            else    
-            return Intervalo(0,max(x.a^n,x.b^n))
+     elseif (x.b < 0 && x.a < 0)
+         return Intervalo(x.b^n,x.a^n)
+     else    
+         return Intervalo(0,max(x.a^n,x.b^n))
     end
 end 
 
-function ^(x::Intervalo, n::Real)   #aqui no se puede utilizar directamente  eva porque la potencia requiere dos argumentos, la base y el exponente, tampoco puedo utilizar RDOWN y RUP por la misma razon
-eva(^, x,n)
-end
+^(x::Intervalo, n::Real)=eva(^, x,n)
+
+
+#algunas funciones monótonas
+
+exp(x::Intervalo)=eva(exp, x)
+
+
+#function log(n,x::Intervalo)
+#	set_rounding(BigFloat, RoundDown)
+#	d=log(n ,BigFloat(x.a))
+#	set_rounding(BigFloat, RoundUp)
+#	u=log(n ,BigFloat(x.b))
+#	Intervalo(d,u)
+#end
 
 ##########################
 ##########################
@@ -264,11 +247,11 @@ end
 
 function ⊂(x::Intervalo, y::Intervalo)
 	if y.a<x.a&&x.b<y.b
-     	 true
+     	 	true
  	elseif y.a==x.a&&x.b==y.b
-	true
+		true
 	else
-	false
+		false
 	end
 end 
 
@@ -284,18 +267,13 @@ end
 function eva(f::Function, I::Intervalo)
 e=f(I.a) 
 c=f(I.b) # esta primera parte solo la realizo para ver cual es menor y cual es mayor y entonces proceder con el redondeo hacia arriba y hacia abajo como corresponde
-
-if e<c  #ES CRECIENTE
-
-Intervalo(RDOWN(f, I.a), RUP(f, I.b))
-
-elseif c<e  #ES DECRECIENTE
-Intervalo(RDOWN(f, I.b), RUP(f, I.a))
-
-else  #IGUAL
-
-Intervalo(RDOWN(f, I.b), RUP(f, I.a))
-end
+	if e<c  #ES CRECIENTE
+	  Intervalo(RDOWN(f, I.a), RUP(f, I.b))
+	elseif c<e  #ES DECRECIENTE
+	  Intervalo(RDOWN(f, I.b), RUP(f, I.a))
+	else  #IGUAL
+	  Intervalo(RDOWN(f, I.b), RUP(f, I.a))
+	end
 end
 
 
@@ -304,27 +282,29 @@ end
 function eva(f::Function, I::Intervalo, n)
 e=f(I.a, n) 
 c=f(I.b, n) # esta primera parte solo la realizo para ver cual es menor y cual es mayor y entonces proceder con el redondeo hacia arriba y hacia abajo como corresponde
-
-if e<c  #ES CRECIENTE
-
-round!(Intervalo(RDOWN(f, I.a, n), RUP(f, I.b, n)))
-
-elseif c<e  #ES DECRECIENTE
-round!(Intervalo(RDOWN(f, I.b, n), RUP(f, I.a, n)))
-
-else  #IGUAL
-
-round!(Intervalo(RDOWN(f, I.b, n), RUP(f, I.a, n)))
-
+	if e<c  #ES CRECIENTE
+		Intervalo(RDOWN(f, I.a, n), RUP(f, I.b, n))
+	elseif c<e  #ES DECRECIENTE
+		Intervalo(RDOWN(f, I.b, n), RUP(f, I.a, n))
+	else  #IGUAL
+	Intervalo(RDOWN(f, I.b, n), RUP(f, I.a, n))
+	end
 end
 
+using PyPlot
+function  grafica(a, b, f::Function)
+x = [a-2:0.1:b+2];
+y= zeros(length(x))
+for  i = 1: length(x)
+    y[i]=f(x[i])
 end
 
-
-exp(x::Intervalo)=round!(eva(exp, x))
-
-
-
+    Inty=f(Intervalo(a,b))   
+    plot(x,y, "-", color="purple")
+    PyPlot.fill_between([a,b],float64(Inty.a),float64(Inty.b),color="blue")
+    PyPlot.fill_between([a-2, a],float64(Inty.a),float64(Inty.b),color="purple", alpha=0.2)
+    PyPlot.fill_between([a, b],-10, f(b), color="purple", alpha=0.2)
+    end
 
 ####estaría muy bonito arreglar esto para que aparezca chido, buscar en #particulas de ejemplos
 #import Base.show
