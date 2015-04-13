@@ -1,5 +1,6 @@
 module Intervalos
 import Base.exp
+import Base.log
 export Intervalo, +,-,*,/, ==, ∈, ⊂, ^, UnionI, RUP, RDOWN ,exp, eva, round!, log, grafica
 
 ##########################
@@ -66,13 +67,13 @@ end
 #para funciones que requieren dos argumentos como ^, log
 function RUP(g::Function, x, y)  #redondeo hacia arriba
 	set_rounding(BigFloat, RoundUp)
-	g(BigFloat(x), y)
+	g(BigFloat(x), BigFloat (y))
 end
 
 
 function RDOWN(g::Function, x, y) ##redonde hacia abajo
 	set_rounding(BigFloat, RoundDown)
-	g(BigFloat(x), y)
+	g(BigFloat(x),BigFloat (y))
 end
 
 
@@ -85,7 +86,7 @@ end
 
 +(x::Intervalo, y::Intervalo)=Intervalo(RDOWN(+,x.a, y.a), RUP(+,x.b,y.b))
 
-+(x::Intervalo, y::Real)=Intervalo(y)+x
++(x::Intervalo, y::Real)=x+Intervalo(y)
 
 +(x::Real, y::Intervalo)= Intervalo(x)+y
 
@@ -96,7 +97,7 @@ end
 ##########################
 ##########################
 
--(x::Intervalo, y::Intervalo)=Intervalo(RDOWN(-,x.a, y.a), RUP(-,x.b,y.b))
+-(x::Intervalo, y::Intervalo)=Intervalo(RDOWN(-,x.a, y.b), RUP(-,x.b,y.a))
 
 -(x::Intervalo, y::Real)=x-Intervalo(y)
 
@@ -173,9 +174,12 @@ function ^(x::Intervalo, n::Integer)
      elseif (x.b < 0 && x.a < 0)
          return Intervalo(x.b^n,x.a^n)
      else    
-         return Intervalo(0,max(x.a^n,x.b^n))
+        return Intervalo(0,max(x.a^n,x.b^n))
     end
 end 
+
+
+
 
 ^(x::Intervalo, n::Real)=eva(^, x,n)
 
@@ -185,13 +189,13 @@ end
 exp(x::Intervalo)=eva(exp, x)
 
 
-#function log(n,x::Intervalo)
-#	set_rounding(BigFloat, RoundDown)
-#	d=log(n ,BigFloat(x.a))
-#	set_rounding(BigFloat, RoundUp)
-#	u=log(n ,BigFloat(x.b))
-#	Intervalo(d,u)
-#end
+function log(n::Real,x::Intervalo)
+	set_rounding(Float64, RoundDown)
+	d=log(n ,float64(x.a))
+	set_rounding(Float64, RoundUp)
+	u=log(n ,float64(x.b))
+	round!(Intervalo(d,u))
+end
 
 ##########################
 ##########################
@@ -302,8 +306,8 @@ end
     Inty=f(Intervalo(a,b))   
     plot(x,y, "-", color="purple")
     PyPlot.fill_between([a,b],float64(Inty.a),float64(Inty.b),color="blue")
-    PyPlot.fill_between([a-2, a],float64(Inty.a),float64(Inty.b),color="purple", alpha=0.2)
-    PyPlot.fill_between([a, b],-10, f(b), color="purple", alpha=0.2)
+    PyPlot.fill_between([a-2, a],float64(Inty.a),float64(Inty.b),color="magenta", alpha=0.5)
+    PyPlot.fill_between([a, b],-10, f(b), color="purple", alpha=0.5)
     end
 
 ####estaría muy bonito arreglar esto para que aparezca chido, buscar en #particulas de ejemplos
