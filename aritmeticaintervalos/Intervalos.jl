@@ -1,24 +1,27 @@
 module Intervalos
+import Base.exp
+export Intervalo, +,-,*,/, ==, ∈, ⊂, ^, UnionI, RUP, RDOWN ,exp, eva, round!
 
-export Intervalo, +,-,*,/, ==, ∈, ⊂, ^, UnionI, RUP, RDOWN ,exp, eva
+##########################
+######  tipos ############
+#### intervalo y #########
+###unión de intervalos####
+##########################
 
 type Intervalo
     a::BigFloat
     b::BigFloat
-
-function Intervalo(x,y)
-if y<x
-a=y
-b=x
-else 
-a=x
-b=y
+	function Intervalo(x,y)
+		if y<x
+		a=y
+		b=x
+		else 
+		a=x
+		b=y
+		end
+	new(a,b)
+	end
 end
-new(a,b)
-end
-end
-
-
 
 
 type UnionI
@@ -28,7 +31,17 @@ end
 
 
 
-function round!(i::Intervalo)
+
+#una constante o intervalo constante
+function Intervalo(c)
+    Intervalo(c,c)
+end
+####################
+####################
+####  REDONDEOS ####
+##################
+
+function round!(i::Intervalo)   #aún no se si este es necesario
     set_rounding(BigFloat, RoundDown)
     i.a=BigFloat(i.a)
     set_rounding(BigFloat, RoundUp)
@@ -36,36 +49,29 @@ function round!(i::Intervalo)
     i
 end
 
-#una constante o intervalo constante
-function Intervalo(c)
-    Intervalo(c,c)
-end
-
-###para realizar los redondeos de manera mas limpia
-
 ###funciones de un solo argumento, como exp, *, cos
 
 function RUP(g::Function, x)  #redondeo hacia arriba
 set_rounding(BigFloat, RoundUp)
-g(x)
+g(BigFloat(x))
 end
 
 
 function RDOWN(g::Function, x) ##redonde hacia abajo
 set_rounding(BigFloat, RoundDown)
-g(x)
+g(BigFloat(x))
 end
 
 #para funciones que requieren dos argumentos como ^, log
 function RUP(g::Function, x, y)  #redondeo hacia arriba
 set_rounding(BigFloat, RoundUp)
-g(x, y)
+g(BigFloat(x), y)
 end
 
 
 function RDOWN(g::Function, x, y) ##redonde hacia abajo
 set_rounding(BigFloat, RoundDown)
-g(x, y)
+g(BigFloat(x), y)
 end
 #funciones para usar con intervalos
 
@@ -78,14 +84,9 @@ end
 ##########################
 
 
-function +(x::Intervalo, y::Intervalo)
-set_rounding(BigFloat, RoundDown)
-d=x.a+y.a
-set_rounding(BigFloat, RoundUp)
-u=x.b+y.b
++(x::Intervalo, y::Intervalo)=round!(Intervalo(RDOWN(+,x.a, y.a), RUP(+,x.b,y.b)))
 
-round!(Intervalo(d, u))
-end
+
 
 function +(x::Intervalo, y::Real)
  Intervalo(y)+x
@@ -103,13 +104,8 @@ end
 ##########################
 ##########################
 
-function -(x::Intervalo, y::Intervalo)
-set_rounding(BigFloat, RoundDown)
-d=x.a-y.a
-set_rounding(BigFloat, RoundUp)
-u=x.b-y.b
-round!(Intervalo(d, u))
-end
+-(x::Intervalo, y::Intervalo)=round!(Intervalo(RDOWN(-,x.a, y.a), RUP(-,x.b,y.b)))
+
 
 function -(x::Intervalo, y::Real)
  x-Intervalo(y)
@@ -299,33 +295,33 @@ Intervalo(RDOWN(f, I.b), RUP(f, I.a))
 else  #IGUAL
 
 Intervalo(RDOWN(f, I.b), RUP(f, I.a))
-
+end
 end
 
-end
 
-# eva para funciones de dos argumentos
+
+# eva para funciones de dos argumentos, un intervalo y un número
 function eva(f::Function, I::Intervalo, n)
 e=f(I.a, n) 
 c=f(I.b, n) # esta primera parte solo la realizo para ver cual es menor y cual es mayor y entonces proceder con el redondeo hacia arriba y hacia abajo como corresponde
 
 if e<c  #ES CRECIENTE
 
-Intervalo(RDOWN(f, I.a, n), RUP(f, I.b, n))
+round!(Intervalo(RDOWN(f, I.a, n), RUP(f, I.b, n)))
 
 elseif c<e  #ES DECRECIENTE
-Intervalo(RDOWN(f, I.b, n), RUP(f, I.a, n))
+round!(Intervalo(RDOWN(f, I.b, n), RUP(f, I.a, n)))
 
 else  #IGUAL
 
-Intervalo(RDOWN(f, I.b, n), RUP(f, I.a, n))
+round!(Intervalo(RDOWN(f, I.b, n), RUP(f, I.a, n)))
 
 end
 
 end
 
 
-exp(x::Intervalo)=eva(exp, x)
+exp(x::Intervalo)=round!(eva(exp, x))
 
 
 
