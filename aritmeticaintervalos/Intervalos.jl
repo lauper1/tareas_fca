@@ -1,7 +1,9 @@
 module Intervalos
 import Base.exp
 import Base.log
-export Intervalo, +,-,*,/, ==, ∈, ⊂, ^, UnionI, RUP, RDOWN ,exp, eva, round!, log, grafica
+import Base.cos
+import Base.sin
+export Intervalo, +,-,*,/, ==, ∈, ⊂, ^, UnionI, RUP, RDOWN ,exp, eva, round!, log, grafica, norm, cos
 
 ##########################
 ######  tipos ############
@@ -13,12 +15,12 @@ type Intervalo
     a::BigFloat
     b::BigFloat
 	function Intervalo(x,y)
-		if y<x
-		a=y
-		b=x
-		else 
-		a=x
-		b=y
+    if y<x
+      a=y
+      b=x
+		else
+      a=x
+      b=y
 		end
 	new(a,b)
 	end
@@ -116,7 +118,7 @@ set_rounding(BigFloat, RoundDown)
 d=min(x.a*y.b,x.b*y.a, x.a*y.a, x.b*y.b)
 set_rounding(BigFloat, RoundUp)
 u= max(x.a*y.b,x.b*y.a, x.a*y.a, x.b*y.b)
-Intervalo(d,u)   
+Intervalo(d,u)
 end
 
 
@@ -143,10 +145,10 @@ function /(x::Intervalo, y::Intervalo)#la division se define en terminos de la m
 end
 
 /(x::Intervalo, y::Real)=Intervalo(x.a,x.b)*Intervalo(1/y)
-    
+
 
 /(x::Real, y::Intervalo)= Intervalo(x)*Intervalo(1/y.a, 1/y.b)
-    
+
 
 
 ##########################
@@ -173,10 +175,10 @@ function ^(x::Intervalo, n::Integer)
         return Intervalo(x.a^n,x.b^n)
      elseif (x.b < 0 && x.a < 0)
          return Intervalo(x.b^n,x.a^n)
-     else    
+     else
         return Intervalo(0,max(x.a^n,x.b^n))
     end
-end 
+end
 
 
 
@@ -199,6 +201,28 @@ end
 
 ##########################
 ##########################
+######## funciones #######
+#### trigonometricas #####
+##########################
+function cos(x::Intervalo)
+  d=x.a%2*π
+  u=x.b%2*π
+if norm(x)>2*π
+    Intervalo(-1,1)
+  elseif d<=π&& u<=π
+    eva(cos, x)
+  elseif d<=π u>=π
+    Intervalo(-1, RUP(d))
+
+
+
+  end
+end
+
+
+
+##########################
+##########################
 ######## IGUALDAD ########
 ##########################
 ##########################
@@ -208,7 +232,7 @@ end
 function ==(x::Intervalo, y::Intervalo)
     if x.a==y.a&&x.b==y.b
         true
-    else 
+    else
         false
     end
 end
@@ -217,7 +241,7 @@ end
 function ==(x::UnionI, y::UnionI)
     if (x.s==y.s || x.s==y.p)&&(x.p==y.s || x.p==y.p)
         true
-    else 
+    else
         false
     end
 end
@@ -257,7 +281,17 @@ function ⊂(x::Intervalo, y::Intervalo)
 	else
 		false
 	end
-end 
+end
+
+
+########################
+###### longitud ########
+####### de   un ############
+#######  intervalo  ####
+########################
+function norm(x::Intervalo)
+  x.b-x.a
+end
 
 ##########################
 ##########################
@@ -269,7 +303,7 @@ end
 
 ###lo siguiente es para aplicar con funciones monótonas en general, sin embargo no es muy cómodo a la hora de usar.
 function eva(f::Function, I::Intervalo)
-e=f(I.a) 
+e=f(I.a)
 c=f(I.b) # esta primera parte solo la realizo para ver cual es menor y cual es mayor y entonces proceder con el redondeo hacia arriba y hacia abajo como corresponde
 	if e<c  #ES CRECIENTE
 	  Intervalo(RDOWN(f, I.a), RUP(f, I.b))
@@ -284,7 +318,7 @@ end
 
 # eva para funciones de dos argumentos, un intervalo y un número
 function eva(f::Function, I::Intervalo, n)
-e=f(I.a, n) 
+e=f(I.a, n)
 c=f(I.b, n) # esta primera parte solo la realizo para ver cual es menor y cual es mayor y entonces proceder con el redondeo hacia arriba y hacia abajo como corresponde
 	if e<c  #ES CRECIENTE
 		Intervalo(RDOWN(f, I.a, n), RUP(f, I.b, n))
@@ -303,7 +337,7 @@ for  i = 1: length(x)
     y[i]=f(x[i])
 end
 
-    Inty=f(Intervalo(a,b))   
+    Inty=f(Intervalo(a,b))
     plot(x,y, "-", color="purple")
     PyPlot.fill_between([a,b],float64(Inty.a),float64(Inty.b),color="blue")
     PyPlot.fill_between([a-2, a],float64(Inty.a),float64(Inty.b),color="magenta", alpha=0.5)
