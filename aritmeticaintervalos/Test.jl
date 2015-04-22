@@ -12,7 +12,7 @@ facts("definición correcta de intervalos, prop elementales") do
 @fact (Intervalo(-1,1) ⊂ Intervalo(-2,2)) =>true
 @fact (Intervalo(-1,1) ⊂ Intervalo(0,10)) =>false
 @fact (Intervalo(-10,10) ⊂ Intervalo(-2,2)) =>false
-
+@fact norm(Intervalo(9,0))=>9
 
 end
 
@@ -32,7 +32,7 @@ end
 
 facts("funciones elementales")do
 ###para funciones monótonas ^, exp
-@fact log(10, Intervalo(1,10))=>Intervalo(0,1) 
+@fact log(10, Intervalo(1,10))=>Intervalo(0,1)
 @fact Intervalo(0,4)^0.5=>Intervalo(0, 2)
 
 @fact exp(Intervalo(0.2, 0.4))=>Intervalo(RDOWN(exp,0.2), RUP(exp,0.4))
