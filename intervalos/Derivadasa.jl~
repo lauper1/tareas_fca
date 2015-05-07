@@ -12,7 +12,7 @@ type fdev
     d
 end
 
-function fdev(c)
+function (c)
     fdev(c,0.0)
 end
 
@@ -68,7 +68,7 @@ function /(b::Real, a::fdev)
 fdev(a.f/b,a.d/b)
 end
 
-function ^(a::fdev, c::Real)
+function ^(a::fdev, c::Reak)
     fdev(a.f^c, (c)*a.f^(c-1)*a.d)
 end
 

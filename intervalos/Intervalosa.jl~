@@ -347,7 +347,7 @@ end
 #######  intervalo  ####
 ########################
 function norm(x::Intervalo)
-  abs(x.b-x.a)
+  x.b-x.a
 end
 
 function norm(v::vacio)
